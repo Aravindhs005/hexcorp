@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>File Upload and Hash Identification</title>
+    <style>
+        /* Global styles */
+        body {
+            background-color: #121212; /* Dark background */
+            color: white; /* White text */
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+        }
+
+        h1, h2 {
+            color: #00bcd4; /* Light blue */
+        }
+
+        /* Form styling */
+        form {
+            background-color: #1e1e1e; /* Dark grey background */
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.4);
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        input[type="file"] {
+            background-color: #00bcd4; /* Blue button */
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            margin: 10px 0;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        button {
+            background-color: #00bcd4; /* Blue button */
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+
+        button:hover {
+            background-color: #0097a7; /* Darker blue on hover */
+        }
+
+        /* Text area styling */
+        pre {
+            background-color: #1e1e1e;
+            color: #00bcd4;
+            padding: 10px;
+            border-radius: 5px;
+            max-width: 80%;
+            word-wrap: break-word;
+        }
+
+        /* Hash result and Next button styling */
+        #hashResult {
+            margin-top: 20px;
+            text-align: center;
+        }
+
+        #nextButton {
+            background-color: #4caf50; /* Green button */
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            display: none;
+        }
+
+        #nextButton:hover {
+            background-color: #388e3c; /* Darker green on hover */
+        }
+
+    </style>
+</head>
+<body>
+    <h1>Upload a TXT File for Hash Identification</h1>
+    <form id="uploadForm" enctype="multipart/form-data">
+        <input type="file" name="file" id="fileInput" required />
+        <button type="submit">Upload</button>
+    </form>
+
+    <div id="fileText" style="margin-top: 20px;">
+        <h2>Extracted Text</h2>
+        <pre id="textContent"></pre>
+    </div>
+
+    <div id="hashResult" style="margin-top: 20px;">
+        <h2>Hash Algorithm Identified:</h2>
+        <p id="hashResultText"></p>
+    </div>
+
+    <button id="nextButton" style="display:none;">Next</button>
+
+    <script>
+        // Handle file upload and text display
+        document.getElementById('uploadForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+    
+            const formData = new FormData();
+            const fileInput = document.getElementById('fileInput');
+            formData.append('file', fileInput.files[0]);
+    
+            // Send the file to the server
+            const response = await fetch('/upload', {
+                method: 'POST',
+                body: formData
+            });
+    
+            const data = await response.json();
+            if (data.success) {
+                // Remove white spaces and newline characters from the extracted text
+                let extractedText = data.text.replace(/\s+/g, '').trim(); // Replaces multiple spaces/newlines with a single space
+
+                // Display the cleaned extracted text
+                document.getElementById('textContent').textContent = extractedText;
+    
+                // Display the hash identification result
+                document.getElementById('hashResultText').textContent = data.hashResult;
+    
+                // Show the Next button
+                document.getElementById('nextButton').style.display = 'inline-block';
+    
+                // Add event listener for Next button
+                document.getElementById('nextButton').addEventListener('click', () => {
+                    if (data.hashResult === "Hash Algorithm: Not Found") {
+                        // Redirect to classical.html and pass the cleaned extracted text
+                        window.location.href = `classical.html?text=${encodeURIComponent(extractedText)}`;
+                    } else {
+                        // Redirect to index1.html and pass the cleaned extracted text
+                        window.location.href = `index1.html?text=${encodeURIComponent(extractedText)}`;
+                    }
+                });
+            } else {
+                document.getElementById('textContent').textContent = 'Failed to extract text or identify hash.';
+            }
+        });
+    </script>
+    
+</body>
+</html>
